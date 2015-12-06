@@ -137,6 +137,7 @@ OUTRES,ALL
 !------------------START--------------------!
 !*DO,I,1,7,1
 *DO,M,2,14,1
+!M=2
 TIME,3600*(M-1)
 NSUBST,1,100,1
 AUTOTS,ON
@@ -155,7 +156,7 @@ ASEL,A,,,SB%I%%Z%
 ASEL,A,,,ZSB%I%%Z%
 *ENDDO
 ASEL,A,,,HLDSB%I%
-ASLE,A,HLDZSB%I%
+ASEL,A,,,HLDZSB%I%
 *ENDDO
 
 SFA,ALL,1,CONV,HT,TAX(M,2)
@@ -168,11 +169,11 @@ ASEL,A,,,XB%I%%Z%
 ASEL,A,,,ZXB%I%%Z%
 *ENDDO
 ASEL,A,,,HLDXB%I%
-ASLE,A,HLDZXB%I%
+ASEL,A,,,HLDZXB%I%
 *ENDDO
 
 SFA,ALL,2,CONV,HB,TAX(M,3)
-!-------------给WEBX（右侧面）施加对流荷载
+!-------------给WEBD（右侧面）施加对流荷载
 ASEL,NONE
 
 *DO,I,2,4,2
