@@ -136,8 +136,8 @@ OUTRES,ALL
 !-----------------循环加载----------------------!
 !------------------START--------------------!
 !*DO,I,1,7,1
-*DO,M,2,14,1
-!M=2
+!*DO,M,2,14,1
+M=8
 TIME,3600*(M-1)
 NSUBST,1,100,1
 AUTOTS,ON
@@ -173,18 +173,7 @@ ASEL,A,,,HLDZXB%I%
 *ENDDO
 
 SFA,ALL,2,CONV,HB,TAX(M,3)
-!-------------给WEBD（右侧面）施加对流荷载
-ASEL,NONE
-
-*DO,I,2,4,2
-*DO,Z,1,20,1
-ASEL,A,,,WB%I%%Z%
-*ENDDO
-ASEL,A,,,HLDWB%I%
-*ENDDO
-
-SFA,ALL,2,CONV,HWD,TAX(M,4)
-!-------------给WEBX（左侧面）施加对流荷载
+!-------------给WEBD（左侧面）施加对流荷载
 ASEL,NONE
 
 *DO,I,1,3,2
@@ -194,7 +183,18 @@ ASEL,A,,,WB%I%%Z%
 ASEL,A,,,HLDWB%I%
 *ENDDO
 
-SFA,ALL,2,CONV,HWX,TAX(M,5)
+SFA,ALL,2,CONV,HWX,TAX(M,4)
+!-------------给WEBX（右侧面）施加对流荷载
+ASEL,NONE
+
+*DO,I,2,4,2
+*DO,Z,1,20,1
+ASEL,A,,,WB%I%%Z%
+*ENDDO
+ASEL,A,,,HLDWB%I%
+*ENDDO
+
+SFA,ALL,2,CONV,HWD,TAX(M,5)
 !-------------给箱子内部施加对流荷载
 !-------------第一部分
 ASEL,NONE
@@ -232,15 +232,70 @@ SFA,ALL,2,CONV,HI,TAX(M,6)
 
 ALLSEL,ALL
 SOLVE
-*ENDDO
+!*ENDDO
 !*ENDDO
 !------------------------END---------------------------!
 
 
 !!~~~~~~~~~~~~~~~~~~后处理模块~~~~~~~~~~~~~~~~~~~~!
 !--------------------START-----------------------!
+FINI
 /POST1
-SET,LAST
-PLNSOL,TEMP
+PLNSOL,TBOT
 
-
+!--------------------定义顶板温度变化路径
+NSEL,S,LOC,X,107.832,107.833
+NSEL,R,LOC,Z,80.000,80.001
+NSEL,R,LOC,Y,-8.4,8.4
+NUM=NDINQR(0,13)
+PATH,TOP-Z,NUM    !定义路径-顶板主方向
+N1=NODE(107.832,-8.4,80)
+PPATH,1,N1
+*DO,I,2,NUM
+N%I%=NNEAR(N%I-1%)
+NSEL,U,,,N%I-1%
+PPATH,I,N%I%
+*ENDDO
+ALLSEL
+PDEF,T-TOP-Z,TBOT    !定义路径上的计算温度值T
+PLPATH,T-TOP-Z
+PRPATH,T-TOP-Z
+!--------------------定义底板温度变化路径
+NSEL,S,LOC,X,111.050,111.051
+NSEL,R,LOC,Z,72.676,72.677
+NSEL,R,LOC,Y,-8.4,8.4
+NUM=NDINQR(0,13)
+PATH,BOT-Z,NUM    !定义路径-底板主方向
+N1=NODE(107.832,-8.4,80)
+PPATH,1,N1
+*DO,I,2,NUM
+N%I%=NNEAR(N%I-1%)
+NSEL,U,,,N%I-1%
+PPATH,I,N%I%
+*ENDDO
+ALLSEL
+PDEF,T-BOT-Z,TTOP    !定义路径上的计算温度值T
+PLPATH,T-BOT-Z
+PRPATH,T-BOT-Z
+!--------------------定义左侧腹板（WEBD）温度变化路径
+J=12000!------四分之一截面对应第12骨架节段，且左侧腹板对应12006/12007/12008三个点的连线
+PATH,WEDD-Z,2,,100    !定义路径-腹板主方向
+N1=NODE(107.832,8.4,80)
+N2=NODE(111.050,8.4,72.676)
+PPATH,1,N1
+PPATH,2,N2
+ALLSEL
+PDEF,T-WEDD-Z,TTOP    !定义路径上的计算温度值T
+PLPATH,T-WEDD-Z
+PRPATH,T-WEDD-Z
+!--------------------定义右侧腹板（WEBX）温度变化路径
+J=12000!------四分之一截面对应第12骨架节段，且左侧腹板对应12006/12007/12008三个点的连线
+PATH,WEDX-Z,2,,100    !定义路径-腹板主方向
+N1=NODE(107.832,-8.4,80)
+N2=NODE(111.050,-8.4,72.676)
+PPATH,1,N1
+PPATH,2,N2
+ALLSEL
+PDEF,T-WEDX-Z,TTOP    !定义路径上的计算温度值T
+PLPATH,T-WEDX-Z
+PRPATH,T-WEDX-Z
