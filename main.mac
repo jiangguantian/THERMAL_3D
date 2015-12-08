@@ -23,18 +23,9 @@ HI=TAX(1,6)    !内部综合换热系数
 
 
 !~~~~~~~~~~~~~定义MAT,ETYPE及参数~~~~~~~~~~~~~~~~!
-ET,1,BEAM189
 ET,2,SHELL131
 KEYOPT,2,3,1
 KEYOPT,2,4,10
-!~~~~~~~~~~~~~钢材
-MP,EX,1,2.1E11
-MP,PRXY,1,0.3
-MP,DENS,1,7850
-!~~~~~~~~~~~~~C40（墩）、C55（梁）钢筋混凝土
-MP,EX,2,3.4E10
-MP,PRXY,2,0.25
-MP,DENS,2,2550
 !~~~~~~~~~~~~~C60钢筋混凝土
 MP,EX,3,3.6E10
 MP,PRXY,3,0.25
@@ -63,13 +54,7 @@ T6=R6/10
 T7=R7/10
 T8=R8/10
 T9=R9/10
-
-!~~~~~~~~~~~~~C80钢筋混凝土
-MP,EX,4,3.8E10
-MP,PRXY,4,0.25
-MP,DENS,4,2550
 !~~~~~~~~~~~~~杆件分段数
-N=3
 MA=6
 !----------------------END--------------------------!
 
@@ -136,8 +121,8 @@ OUTRES,ALL
 !-----------------循环加载----------------------!
 !------------------START--------------------!
 !*DO,I,1,7,1
-!*DO,M,2,14,1
-M=8
+*DO,M,2,14,1
+!M=8
 TIME,3600*(M-1)
 NSUBST,1,100,1
 AUTOTS,ON
@@ -232,7 +217,7 @@ SFA,ALL,2,CONV,HI,TAX(M,6)
 
 ALLSEL,ALL
 SOLVE
-!*ENDDO
+*ENDDO
 !*ENDDO
 !------------------------END---------------------------!
 
@@ -241,61 +226,127 @@ SOLVE
 !--------------------START-----------------------!
 FINI
 /POST1
+SET,LAST
 PLNSOL,TBOT
 
-!--------------------定义顶板温度变化路径
-NSEL,S,LOC,X,107.832,107.833
-NSEL,R,LOC,Z,80.000,80.001
-NSEL,R,LOC,Y,-8.4,8.4
-NUM=NDINQR(0,13)
-PATH,TOP-Z,NUM    !定义路径-顶板主方向
-N1=NODE(107.832,-8.4,80)
-PPATH,1,N1
-*DO,I,2,NUM
-N%I%=NNEAR(N%I-1%)
-NSEL,U,,,N%I-1%
-PPATH,I,N%I%
-*ENDDO
+!!--------------------定义顶板温度变化路径
+!NSEL,S,LOC,X,107.832,107.833
+!NSEL,R,LOC,Z,80.000,80.001
+!NSEL,R,LOC,Y,-8.4,8.4
+!NUM=NDINQR(0,13)
+!PATH,TOP-Z,NUM    !定义路径-顶板主方向
+!N1=NODE(107.832,-8.4,80)
+!PPATH,1,N1
+!*DO,I,2,NUM
+!N%I%=NNEAR(N%I-1%)
+!NSEL,U,,,N%I-1%
+!PPATH,I,N%I%
+!*ENDDO
+!ALLSEL
+!PDEF,T-TOP-Z,TBOT    !定义路径上的计算温度值T
+!PLPATH,T-TOP-Z
+!PRPATH,T-TOP-Z
+!!--------------------定义底板温度变化路径
+!NSEL,S,LOC,X,111.050,111.051
+!NSEL,R,LOC,Z,72.676,72.677
+!NSEL,R,LOC,Y,-8.4,8.4
+!NUM=NDINQR(0,13)
+!PATH,BOT-Z,NUM    !定义路径-底板主方向
+!N1=NODE(107.832,-8.4,80)
+!PPATH,1,N1
+!*DO,I,2,NUM
+!N%I%=NNEAR(N%I-1%)
+!NSEL,U,,,N%I-1%
+!PPATH,I,N%I%
+!*ENDDO
+!ALLSEL
+!PDEF,T-BOT-Z,TTOP    !定义路径上的计算温度值T
+!PLPATH,T-BOT-Z
+!PRPATH,T-BOT-Z
+!!--------------------定义左侧腹板（WEBD）温度变化路径
+!J=12000!------四分之一截面对应第12骨架节段，且左侧腹板对应12006/12007/12008三个点的连线
+!PATH,WEDD-Z,2,,100    !定义路径-腹板主方向
+!N1=NODE(107.832,8.4,80)
+!N2=NODE(111.050,8.4,72.676)
+!PPATH,1,N1
+!PPATH,2,N2
+!ALLSEL
+!PDEF,T-WEDD-Z,TTOP    !定义路径上的计算温度值T
+!PLPATH,T-WEDD-Z
+!PRPATH,T-WEDD-Z
+!!--------------------定义右侧腹板（WEBX）温度变化路径
+!J=12000!------四分之一截面对应第12骨架节段，且左侧腹板对应12006/12007/12008三个点的连线
+!PATH,WEDX-Z,2,,100    !定义路径-腹板主方向
+!N1=NODE(107.832,-8.4,80)
+!N2=NODE(111.050,-8.4,72.676)
+!PPATH,1,N1
+!PPATH,2,N2
+!ALLSEL
+!PDEF,T-WEDX-Z,TTOP    !定义路径上的计算温度值T
+!PLPATH,T-WEDX-Z
+!PRPATH,T-WEDX-Z
+
+
+
+FINISH
+/FILNAME,THERMAL_3D
+/TITLE,Thermal_Analysis
+/PREP7
+ETCHG,TTS
+KEYOPT,2,3,2
+KEYOPT,2,8,1
+MP,ALPX,2,1E-5!!混凝土的热膨胀系数是8~12xE-6/℃,决定于骨料种类、含量和混凝土配合比。
+FINI
+/SOLU
+ANTYPE,STATIC
+
+TREF,30
 ALLSEL
-PDEF,T-TOP-Z,TBOT    !定义路径上的计算温度值T
-PLPATH,T-TOP-Z
-PRPATH,T-TOP-Z
-!--------------------定义底板温度变化路径
-NSEL,S,LOC,X,111.050,111.051
-NSEL,R,LOC,Z,72.676,72.677
-NSEL,R,LOC,Y,-8.4,8.4
-NUM=NDINQR(0,13)
-PATH,BOT-Z,NUM    !定义路径-底板主方向
-N1=NODE(107.832,-8.4,80)
-PPATH,1,N1
-*DO,I,2,NUM
-N%I%=NNEAR(N%I-1%)
-NSEL,U,,,N%I-1%
-PPATH,I,N%I%
-*ENDDO
+SFADELE,ALL,1,CONV
 ALLSEL
-PDEF,T-BOT-Z,TTOP    !定义路径上的计算温度值T
-PLPATH,T-BOT-Z
-PRPATH,T-BOT-Z
-!--------------------定义左侧腹板（WEBD）温度变化路径
-J=12000!------四分之一截面对应第12骨架节段，且左侧腹板对应12006/12007/12008三个点的连线
-PATH,WEDD-Z,2,,100    !定义路径-腹板主方向
-N1=NODE(107.832,8.4,80)
-N2=NODE(111.050,8.4,72.676)
-PPATH,1,N1
-PPATH,2,N2
+SFADELE,ALL,2,CONV
+LDREAD,TEMP,6,,,,BeiPanJiang_Archbridge,RTH
+ACEL,,,9.8
+
+!----------------------START-----------------------!
+!----------------定义主拱圈的约束-----------------!
+KWPLAN,1,1002,1001,1003
+CSYS,4
+NSEL,S,LOC,Z,-0.01,0.01
+NSEL,R,LOC,X,-0.1,28!后面发现有些交界墩的点也被约束故加上这个选择
+NSEL,R,LOC,Y,-0.1,9!后面发现有些交界墩的点也被约束故加上这个选择
+D,ALL,ALL
+CSYS,0
+
+A=-KX(1002)+445
+B=KY(1002)
+C=KZ(1002)
+D=KP(A,B,C)
+
+A=-KX(1001)+445
+B=KY(1001)
+C=KZ(1001)
+E=KP(A,B,C)
+
+A=-KX(1003)+445
+B=KY(1003)
+C=KZ(1003)
+F=KP(A,B,C)
+
+KWPLAN,1,D,E,F
+CSYS,4
+NSEL,S,LOC,Z,-0.01,0.01
+NSEL,R,LOC,X,-0.1,28!后面发现有些交界墩的点也被约束故加上这个选择
+NSEL,R,LOC,Y,-0.1,9!后面发现有些交界墩的点也被约束故加上这个选择
+D,ALL,ALL
+CSYS,0
+!----------------------END-----------------------!
+
+
+
 ALLSEL
-PDEF,T-WEDD-Z,TTOP    !定义路径上的计算温度值T
-PLPATH,T-WEDD-Z
-PRPATH,T-WEDD-Z
-!--------------------定义右侧腹板（WEBX）温度变化路径
-J=12000!------四分之一截面对应第12骨架节段，且左侧腹板对应12006/12007/12008三个点的连线
-PATH,WEDX-Z,2,,100    !定义路径-腹板主方向
-N1=NODE(107.832,-8.4,80)
-N2=NODE(111.050,-8.4,72.676)
-PPATH,1,N1
-PPATH,2,N2
-ALLSEL
-PDEF,T-WEDX-Z,TTOP    !定义路径上的计算温度值T
-PLPATH,T-WEDX-Z
-PRPATH,T-WEDX-Z
+SOLVE
+FINI
+/POST1
+PLNSOL,S,EQV
+FINI
